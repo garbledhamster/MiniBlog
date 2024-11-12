@@ -1,335 +1,137 @@
-// DOM Elements
-const openFormButton = document.getElementById("open-form-button");
-const closeFormButton = document.getElementById("close-form-button");
-const addPageForm = document.getElementById("add-page-form");
-const pageForm = document.getElementById("page-form");
+const searchInput = document.getElementById("search-input");
 const latestGrid = document.getElementById("latest-grid");
-const loadJsonButton = document.getElementById("load-json-button");
-const exportJsonButton = document.getElementById("export-json-button");
-const clearButton = document.getElementById("clear-button");
-const jsonFileInput = document.getElementById("json-file-input");
-const formTitle = document.getElementById("form-title");
 const paginationContainer = document.getElementById("pagination");
-const zoomButton = document.getElementById("zoom-button");
-const sortButton = document.getElementById("sort-button");
-const saveButton = document.getElementById("save-button");
-const overlay = document.getElementById("expanded-overlay");
+const statusMessage = document.getElementById("status-message");
+const suggestionBox = document.getElementById("suggestion-box");
 
 let pages = [];
-let currentEditIndex = null;
-let expandedPageId = null;
-let expandedScrollPosition = 0;
-const imageCache = new Map();
 const itemsPerPage = 10;
 let currentPage = 1;
 let totalPages = 1;
-const zoomLevels = [100, 125, 150];
-let currentZoomLevelIndex = 0;
-const sortOrder = ["🚫", "date", "name", "color"];
-let currentSortIndex = 0;
-let currentSort = sortOrder[currentSortIndex];
-let nextPageId = 1;
+let searchQuery = "";
 
-// Function to preload images
-function preloadImage(url) {
-  if (!imageCache.has(url)) {
-    const img = new Image();
-    img.src = url;
-    imageCache.set(url, true);
-  }
-}
+/* ========================================= */
+/*        INITIALIZATION AND EVENTS         */
+/* ========================================= */
 
-// Load pages from localStorage
+// Load posts from posts.json on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
-  const storedPages = localStorage.getItem("pages");
-  if (storedPages) {
-    try {
-      pages = JSON.parse(storedPages);
-      pages.forEach((page) => {
-        if (!page.id) {
-          page.id = nextPageId++;
-        } else {
-          nextPageId = Math.max(nextPageId, page.id + 1);
-        }
-        if (page.Picture) {
-          preloadImage(page.Picture);
-        }
-      });
+  fetch('posts.json')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Failed to load posts.json");
+      }
+      return response.json();
+    })
+    .then(data => {
+      pages = data;
       totalPages = Math.ceil(pages.length / itemsPerPage);
       displayPages();
       setupPagination();
-    } catch (error) {
-      pages = [];
-      displayPages();
-    }
-  } else {
-    displayPages();
-  }
+    })
+    .catch(error => {
+      console.error("Error loading posts:", error);
+      latestGrid.innerHTML = `<p>Error loading posts. Please try again later.</p>`;
+    });
 });
 
-// Event listener for opening the form
-if (openFormButton) {
-  openFormButton.addEventListener("click", () => {
-    showForm();
-  });
-}
+/* ========================================= */
+/*        SEARCH INPUT AUTOCOMPLETE          */
+/* ========================================= */
 
-// Function to show the form
-function showForm() {
-  addPageForm.style.display = "block";
-  formTitle.textContent = "Add New Page";
-  pageForm.reset();
-  currentEditIndex = null;
-  addOverlay();
-  addPageForm.scrollIntoView({ behavior: "smooth" });
-}
+// Event listeners for the search input field to handle search
+searchInput.addEventListener("input", handleSearchInput);
+searchInput.addEventListener("keydown", handleSearchKeyDown);
 
-// Event listener for closing the form
-if (closeFormButton) {
-  closeFormButton.addEventListener("click", () => {
-    hideForm();
-  });
-}
+/* ========================================= */
+/*        AUTOCOMPLETE FUNCTIONS             */
+/* ========================================= */
 
-// Function to hide the form
-function hideForm() {
-  addPageForm.style.display = "none";
-  pageForm.reset();
-  currentEditIndex = null;
-  // Only remove overlay if no expanded post is open
-  if (expandedPageId === null) {
-    removeOverlay();
-  }
-}
-
-// Event listener for clicking the overlay
-overlay.addEventListener("click", (e) => {
-  if (e.target === overlay) {
-    closeAllModals();
-  }
-});
-
-// Function to close both the form and the expanded post
-function closeAllModals() {
-  // Close the edit form if it's open
-  if (addPageForm.style.display === "block") {
-    hideForm(false); // We can remove the parameter as it's no longer used
-  }
-  // Close the expanded post if it's open
-  if (expandedPageId !== null) {
-    expandedPageId = null;
-    displayPages();
-    setupPagination();
-    window.scrollTo({ top: expandedScrollPosition, behavior: "smooth" });
-  }
-  // Remove the overlay after closing modals
-  removeOverlay();
-}
-
-// Event listener for the clear button
-if (clearButton) {
-  clearButton.addEventListener("click", () => {
-    if (confirm("Are you sure you want to clear all configurations?")) {
-      localStorage.removeItem("pages");
-      pages = [];
-      imageCache.clear();
-      expandedPageId = null;
-      currentPage = 1;
-      totalPages = 1;
-      displayPages();
-      setupPagination();
-    }
-  });
-}
-
-// Event listener for form submission
-pageForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const picture = document.getElementById("picture").value.trim();
-  const bgColor = document.getElementById("bg-color").value;
-  const title = document.getElementById("title").value.trim();
-  const description = document.getElementById("description").value.trim();
-  const date = document.getElementById("date").value.trim();
-  const body = document.getElementById("body").value.trim();
-
-  if (!title || !description || !body) {
-    alert("Please fill in all required fields.");
-    return;
-  }
-
-  if (picture) {
-    preloadImage(picture);
-  }
-
-  const pageData = {
-    id: currentEditIndex !== null ? pages[currentEditIndex].id : nextPageId++,
-    Picture: picture,
-    BgColor: bgColor,
-    Title: title,
-    Description: description,
-    Date: date || "No Date Provided",
-    Body: body
-  };
-
-  if (currentEditIndex === null) {
-    pages.push(pageData);
-  } else {
-    pages[currentEditIndex] = pageData;
-  }
-
-  localStorage.setItem("pages", JSON.stringify(pages));
-  totalPages = Math.ceil(pages.length / itemsPerPage);
-  if (currentPage > totalPages) {
-    currentPage = totalPages;
-  }
+function handleSearchInput(event) {
+  const query = searchInput.value.trim().toLowerCase();
+  searchQuery = query;
+  currentPage = 1;
   displayPages();
   setupPagination();
-
-  saveButton.textContent = "✅";
-  saveButton.disabled = true;
-  setTimeout(() => {
-    saveButton.textContent = "💾";
-    saveButton.disabled = false;
-  }, 2000);
-});
-
-// Event listener for loading JSON
-if (loadJsonButton) {
-  loadJsonButton.addEventListener("click", () => {
-    jsonFileInput.click();
-  });
 }
 
-jsonFileInput.addEventListener("change", handleFileSelect, false);
-
-function handleFileSelect(event) {
-  const file = event.target.files[0];
-  if (!file) {
-    alert("No file selected!");
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    try {
-      const json = JSON.parse(e.target.result);
-      if (Array.isArray(json)) {
-        const invalidPages = json.filter((page) => !isValidPage(page));
-        if (invalidPages.length > 0) {
-          alert("Some pages are missing required fields.");
-          return;
-        }
-        pages = json;
-        pages.forEach((page) => {
-          if (!page.id) {
-            page.id = nextPageId++;
-          } else {
-            nextPageId = Math.max(nextPageId, page.id + 1);
-          }
-          if (page.Picture) {
-            preloadImage(page.Picture);
-          }
-        });
-        localStorage.setItem("pages", JSON.stringify(pages));
-        expandedPageId = null;
-        currentPage = 1;
-        totalPages = Math.ceil(pages.length / itemsPerPage);
-        displayPages();
-        setupPagination();
-      } else {
-        alert("Invalid JSON format! Expected an array of pages.");
+function handleSearchKeyDown(event) {
+  if (
+    suggestionBox.style.display === "block" &&
+    (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter")
+  ) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      moveSelection(1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      moveSelection(-1);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      const selected = suggestionBox.querySelector(".suggestion-item.selected");
+      if (selected) {
+        selectSuggestion(selected);
       }
-    } catch (error) {
-      alert("Invalid JSON file!");
     }
-  };
-  reader.readAsText(file);
+  }
 }
 
-function isValidPage(page) {
-  return (
-    page.Title && page.Description && page.Body && page.Date && page.BgColor
-  );
-}
+/* ========================================= */
+/*        DISPLAY FUNCTIONS                  */
+/* ========================================= */
 
-// Event listener for exporting JSON
-if (exportJsonButton) {
-  exportJsonButton.addEventListener("click", () => {
-    if (pages.length === 0) {
-      alert("No data to export!");
-      return;
-    }
-    const dataStr = JSON.stringify(pages, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "pages.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-}
-
-// Function to display pages
+// Function to display pages based on currentPage and searchQuery
 function displayPages() {
   latestGrid.innerHTML = "";
 
   if (pages.length === 0) {
-    const noPagesMessage = document.createElement("p");
-    noPagesMessage.textContent = "No pages available. Please add a new page.";
-    latestGrid.appendChild(noPagesMessage);
-    paginationContainer.innerHTML = "";
+    latestGrid.innerHTML = `<p>No posts available.</p>`;
     return;
   }
 
-  const sortedPages = [...pages].sort((a, b) => {
-    if (currentSort === "date") {
-      const dateA = new Date(a.Date);
-      const dateB = new Date(b.Date);
-      return dateB - dateA;
-    } else if (currentSort === "name") {
-      return a.Title.localeCompare(b.Title);
-    } else if (currentSort === "color") {
-      return a.BgColor.localeCompare(b.BgColor);
-    }
-    return 0;
-  });
+  // Filter pages by searchQuery
+  let filteredPages = pages;
+  if (searchQuery !== "") {
+    const isExactMatch =
+      searchQuery.startsWith('"') && searchQuery.endsWith('"');
+    const query = isExactMatch
+      ? searchQuery.slice(1, -1).toLowerCase()
+      : searchQuery;
 
-  if (expandedPageId !== null) {
-    const expandedPageIndex = sortedPages.findIndex(
-      (page) => page.id === expandedPageId
-    );
-    if (expandedPageIndex > -1) {
-      const pageOfExpandedPage =
-        Math.floor(expandedPageIndex / itemsPerPage) + 1;
-      currentPage = pageOfExpandedPage;
-    }
+    filteredPages = pages.filter((page) => {
+      const titleMatch = page.Title.toLowerCase().includes(query);
+      const bodyMatch = page.Body.toLowerCase().includes(query);
+
+      if (isExactMatch) {
+        // Exact phrase match
+        return (
+          page.Title.toLowerCase().includes(query) ||
+          page.Body.toLowerCase().includes(query)
+        );
+      } else {
+        // Partial match
+        return titleMatch || bodyMatch;
+      }
+    });
   }
 
-  totalPages = Math.ceil(sortedPages.length / itemsPerPage);
+  if (filteredPages.length === 0) {
+    latestGrid.innerHTML = `<p>No posts found matching your search.</p>`;
+    return;
+  }
+
+  totalPages = Math.ceil(filteredPages.length / itemsPerPage);
   if (currentPage > totalPages) currentPage = totalPages;
   if (currentPage < 1) currentPage = 1;
 
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, sortedPages.length);
-  const currentPages = sortedPages.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredPages.length);
+  const currentPages = filteredPages.slice(startIndex, endIndex);
 
   currentPages.forEach((page) => {
     const item = document.createElement("div");
     item.className = "latest-grid-item";
     item.id = `page-${page.id}`;
-
-    if (expandedPageId === page.id) {
-      item.classList.add("expanded");
-      item.addEventListener("scroll", () => handleCardScroll(item));
-    }
-
-    const cardHeader = document.createElement("div");
-    cardHeader.className = "card-header";
-    const title = document.createElement("h2");
-    title.textContent = page.Title;
-    title.setAttribute("title", page.Title);
-    cardHeader.appendChild(title);
-    item.appendChild(cardHeader);
 
     const imgContainer = document.createElement("div");
     imgContainer.className = "image-container";
@@ -345,6 +147,14 @@ function displayPages() {
     }
     item.appendChild(imgContainer);
 
+    const cardHeader = document.createElement("div");
+    cardHeader.className = "card-header";
+    const title = document.createElement("h2");
+    title.textContent = page.Title;
+    title.setAttribute("title", page.Title);
+    cardHeader.appendChild(title);
+    item.appendChild(cardHeader);
+
     const desc = document.createElement("h4");
     desc.className = "description";
     desc.textContent = page.Description;
@@ -358,60 +168,26 @@ function displayPages() {
     const body = document.createElement("div");
     body.className = "body-content";
     const rawHTML = marked.parse(page.Body);
-    body.innerHTML = DOMPurify.sanitize(rawHTML);
+    const processedHTML = processLinks(rawHTML);
+    body.innerHTML = DOMPurify.sanitize(processedHTML);
     item.appendChild(body);
 
-    const cardActions = document.createElement("div");
-    cardActions.className = "card-actions";
-
-    const actualIndex = pages.findIndex((p) => p.id === page.id);
-
-    const deleteButton = document.createElement("button");
-    deleteButton.className = "delete-button";
-    deleteButton.innerHTML = "🗑️";
-    deleteButton.title = "Delete Page 🗑️";
-    deleteButton.addEventListener("click", (e) => {
-      e.stopPropagation();
-      deletePage(actualIndex);
-    });
-    cardActions.appendChild(deleteButton);
-
-    const editButton = document.createElement("button");
-    editButton.className = "edit-button";
-    editButton.innerHTML = "✏️";
-    editButton.title = "Edit Page ✏️";
-    editButton.addEventListener("click", (e) => {
-      e.stopPropagation();
-      editPage(actualIndex);
-    });
-    cardActions.appendChild(editButton);
-
-    item.appendChild(cardActions);
-
+    // Add click event listener to toggle body-content
     cardHeader.addEventListener("click", () => {
-      if (expandedPageId === page.id) {
-        expandedPageId = null;
-        removeOverlay();
-        displayPages();
-        setupPagination();
-        window.scrollTo({ top: expandedScrollPosition, behavior: "smooth" });
-      } else {
-        expandedScrollPosition = window.scrollY || window.pageYOffset;
-        expandedPageId = page.id;
-        addOverlay();
-        displayPages();
-        setupPagination();
-
+      const isVisible = body.style.display === "block";
+      // Hide all other open posts
+      document.querySelectorAll(".body-content").forEach((b) => {
+        b.style.display = "none";
+      });
+      if (!isVisible) {
+        body.style.display = "block";
+        // Optionally, scroll to the post
+        item.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Highlight the post
+        item.classList.add("highlight");
         setTimeout(() => {
-          const expandedCard = document.getElementById(`page-${page.id}`);
-          if (expandedCard) {
-            expandedCard.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-              inline: "nearest"
-            });
-          }
-        }, 100);
+          item.classList.remove("highlight");
+        }, 2000);
       }
     });
 
@@ -419,68 +195,34 @@ function displayPages() {
   });
 }
 
-// Function to handle card scroll
-function handleCardScroll(expandedCard) {
-  const isAtBottom =
-    expandedCard.scrollHeight - expandedCard.scrollTop <=
-    expandedCard.clientHeight + 1;
-
-  expandedCard.style.boxShadow = isAtBottom
-    ? "none"
-    : "inset 0px -10px 10px -10px rgba(0, 0, 0, 1)";
-}
-
-// Function to delete a page
-function deletePage(index) {
-  if (confirm("Are you sure you want to delete this page?")) {
-    const deletedPageId = pages[index].id;
-    pages.splice(index, 1);
-    localStorage.setItem("pages", JSON.stringify(pages));
-    if (expandedPageId === deletedPageId) {
-      expandedPageId = null;
+// Function to process [[PAGE NAME]] links
+function processLinks(html) {
+  return html.replace(/\[\[([^\]]+)\]\]/g, (match, p1) => {
+    const page = pages.find((page) => page.Title === p1.trim());
+    if (page) {
+      return `<a href="#page-${page.id}" class="page-link" data-page-id="${page.id}">${p1.trim()}</a>`;
+    } else {
+      return `<span class="missing-page">${p1.trim()}</span>`;
     }
-    totalPages = Math.ceil(pages.length / itemsPerPage);
-    if (currentPage > totalPages) {
-      currentPage = totalPages;
-    }
-    displayPages();
-    setupPagination();
-  }
+  });
 }
 
-// Function to edit a page
-function editPage(index) {
-  const page = pages[index];
-  if (!page) {
-    alert("Page not found!");
-    return;
-  }
-  expandedScrollPosition = window.scrollY || window.pageYOffset;
-  addPageForm.style.display = "block";
-  formTitle.textContent = "Edit Page";
-  document.getElementById("picture").value = page.Picture || "";
-  document.getElementById("bg-color").value = page.BgColor || "#FFFF00";
-  document.getElementById("title").value = page.Title;
-  document.getElementById("description").value = page.Description;
-  document.getElementById("date").value = page.Date;
-  document.getElementById("body").value = page.Body;
-  currentEditIndex = index;
-  addOverlay();
-  addPageForm.scrollIntoView({ behavior: "smooth" });
-}
+/* ========================================= */
+/*        PAGINATION FUNCTIONS               */
+/* ========================================= */
 
-// Function to set up pagination
+// Function to set up pagination buttons
 function setupPagination() {
   paginationContainer.innerHTML = "";
   if (totalPages <= 1) return;
 
+  // Previous Button
   const prevButton = document.createElement("button");
   prevButton.textContent = "⬅️";
   prevButton.disabled = currentPage === 1;
   prevButton.addEventListener("click", () => {
     if (currentPage > 1) {
       currentPage--;
-      expandedPageId = null;
       displayPages();
       setupPagination();
       scrollToTop();
@@ -488,6 +230,7 @@ function setupPagination() {
   });
   paginationContainer.appendChild(prevButton);
 
+  // Page Number Buttons
   for (let i = 1; i <= totalPages; i++) {
     const pageButton = document.createElement("button");
     pageButton.textContent = i;
@@ -496,7 +239,6 @@ function setupPagination() {
     }
     pageButton.addEventListener("click", () => {
       currentPage = i;
-      expandedPageId = null;
       displayPages();
       setupPagination();
       scrollToTop();
@@ -504,13 +246,13 @@ function setupPagination() {
     paginationContainer.appendChild(pageButton);
   }
 
+  // Next Button
   const nextButton = document.createElement("button");
   nextButton.textContent = "➡️";
   nextButton.disabled = currentPage === totalPages;
   nextButton.addEventListener("click", () => {
     if (currentPage < totalPages) {
       currentPage++;
-      expandedPageId = null;
       displayPages();
       setupPagination();
       scrollToTop();
@@ -519,62 +261,35 @@ function setupPagination() {
   paginationContainer.appendChild(nextButton);
 }
 
-// Function to scroll to the top
+// Function to scroll to the top of the posts
 function scrollToTop() {
   latestGrid.scrollIntoView({ behavior: "smooth" });
 }
 
-// Event listener for the zoom button
-if (zoomButton) {
-  zoomButton.addEventListener("click", () => {
-    document.body.classList.remove("zoom-100", "zoom-125", "zoom-150");
-    currentZoomLevelIndex = (currentZoomLevelIndex + 1) % zoomLevels.length;
-    const zoomClass = `zoom-${zoomLevels[currentZoomLevelIndex]}`;
-    document.body.classList.add(zoomClass);
-  });
-}
+/* ========================================= */
+/*        SUGGESTION BOX FUNCTIONS           */
+/* ========================================= */
 
-// Event listener for the sort button
-if (sortButton) {
-  sortButton.addEventListener("click", () => {
-    currentSortIndex = (currentSortIndex + 1) % sortOrder.length;
-    currentSort = sortOrder[currentSortIndex];
+// Optional: Implement autocomplete suggestions for search
+// You can enhance this section based on your requirements
 
-    let icon = "";
-    let titleText = "";
+/* ========================================= */
+/*        PAGE LINK SCROLLING                 */
+/* ========================================= */
 
-    if (currentSort === "date") {
-      icon = "🗓️";
-      titleText = "Sort by Date Posted 🗓️";
-    } else if (currentSort === "name") {
-      icon = "🔡";
-      titleText = "Sort by Name 🔡";
-    } else if (currentSort === "color") {
-      icon = "🎨";
-      titleText = "Sort by Color 🎨";
-    } else {
-      icon = "🚫";
-      titleText = "No sorting applied";
+// Smooth scrolling for page links
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.classList.contains("page-link")) {
+    e.preventDefault();
+    const pageId = e.target.getAttribute("data-page-id");
+    const targetElement = document.getElementById(`page-${pageId}`);
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Optionally, highlight the target element
+      targetElement.classList.add("highlight");
+      setTimeout(() => {
+        targetElement.classList.remove("highlight");
+      }, 2000);
     }
-
-    sortButton.innerHTML = icon;
-    sortButton.title = titleText;
-    expandedPageId = null;
-    displayPages();
-    setupPagination();
-  });
-}
-
-// Function to add the overlay
-function addOverlay() {
-  overlay.style.display = "block";
-  overlay.style.pointerEvents = "auto";
-  document.body.classList.add("no-scroll");
-}
-
-// Function to remove the overlay
-function removeOverlay() {
-  overlay.style.display = "none";
-  overlay.style.pointerEvents = "none";
-  document.body.classList.remove("no-scroll");
-}
+  }
+});
