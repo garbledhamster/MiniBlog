@@ -1,37 +1,35 @@
-# Make a Blog
+# MiniBlog
 
 ![Logo](./screenshots/logo.png)  
 *[INPUT SCREENSHOT HERE]*
 
-Welcome to **Make a Blog**, a simple yet powerful web application that allows you to create, manage, and export your blog pages effortlessly. Whether you're a seasoned blogger or just starting out, Make a Blog provides an intuitive interface to help you organize your thoughts and share them with the world.
+Welcome to **MiniBlog**, a lightweight and intuitive web application designed to help you create, manage, and export your blog posts with ease. Whether you're a beginner or an experienced blogger, MiniBlog offers a seamless experience to organize your thoughts and share them with the world.
 
 ## Table of Contents
 
 - [Features](#features)
 - [Screenshots](#screenshots)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
 - [Usage](#usage)
-  - [Adding a New Page](#adding-a-new-page)
-  - [Editing a Page](#editing-a-page)
-  - [Deleting a Page](#deleting-a-page)
+  - [Accessing MiniBlog](#accessing-miniblog)
+  - [Adding a New Post](#adding-a-new-post)
+  - [Editing a Post](#editing-a-post)
+  - [Deleting a Post](#deleting-a-post)
   - [Exporting Your Blog](#exporting-your-blog)
   - [Importing Your Blog](#importing-your-blog)
   - [Using Commands](#using-commands)
   - [Zooming and Sorting](#zooming-and-sorting)
   - [Clearing All Data](#clearing-all-data)
 - [Command Reference](#command-reference)
-- [Contributing](#contributing)
 - [License](#license)
+- [Acknowledgements](#acknowledgements)
 
 ## Features
 
-- **Add, Edit, and Delete Pages:** Create rich blog pages with images, descriptions, dates, and markdown-supported body content.
-- **Export and Import JSON:** Easily backup your blog data or transfer it to another instance.
-- **Command Autocomplete:** Utilize intuitive commands to streamline your blogging workflow.
-- **Zoom and Sort:** Customize the view with zoom levels and sort your pages by date, name, or color.
-- **Search Functionality:** Quickly find pages using the search bar with support for exact and partial matches.
+- **Create, Edit, and Delete Posts:** Easily manage your blog content with user-friendly forms.
+- **Export and Import JSON:** Backup your blog data or migrate it to another instance effortlessly.
+- **Command Autocomplete:** Utilize intuitive commands for streamlined blogging operations.
+- **Zoom and Sort:** Customize your viewing experience with zoom levels and sorting options.
+- **Search Functionality:** Quickly find posts using the search bar with support for exact and partial matches.
 - **Responsive Design:** Access and manage your blog from any device with a clean and responsive interface.
 
 ## Screenshots
@@ -41,14 +39,14 @@ Welcome to **Make a Blog**, a simple yet powerful web application that allows yo
 ![Home Page](./screenshots/home.png)  
 *[INPUT SCREENSHOT HERE]*
 
-### Add New Page Form
+### Add New Post Form
 
-![Add Page Form](./screenshots/add-page-form.png)  
+![Add Post Form](./screenshots/add-post-form.png)  
 *[INPUT SCREENSHOT HERE]*
 
-### Editing a Page
+### Editing a Post
 
-![Edit Page](./screenshots/edit-page.png)  
+![Edit Post](./screenshots/edit-post.png)  
 *[INPUT SCREENSHOT HERE]*
 
 ### Exporting JSON
@@ -71,83 +69,53 @@ Welcome to **Make a Blog**, a simple yet powerful web application that allows yo
 ![Zoom and Sort](./screenshots/zoom-sort.png)  
 *[INPUT SCREENSHOT HERE]*
 
-## Getting Started
-
-Follow these instructions to set up and run Make a Blog on your local machine.
-
-### Prerequisites
-
-- **Web Browser:** A modern web browser such as Chrome, Firefox, Edge, or Safari.
-- **Text Editor:** (Optional) For modifying the code, use editors like VS Code, Sublime Text, or Atom.
-
-### Installation
-
-1. **Clone the Repository**
-
-   ```bash
-   git clone https://github.com/your-username/make-a-blog.git
-   ```
-
-2. **Navigate to the Project Directory**
-
-   ```bash
-   cd make-a-blog
-   ```
-
-3. **Open the Application**
-
-   Simply open the `index.html` file in your preferred web browser.
-
-   - **Option 1:** Double-click the `index.html` file.
-   - **Option 2:** Use the command line:
-
-     ```bash
-     open index.html
-     ```
-
-     *(Replace `open` with `xdg-open` on Linux if necessary.)*
-
 ## Usage
 
-### Adding a New Page
+### Accessing MiniBlog
 
-1. **Open the Add Page Form**
+Access your MiniBlog application through GitHub Pages:
 
-   Click on the **➕ Add New Page** button located in the control panel.
+[**Live Demo**](https://garbledhamster.github.io/MiniBlog/)
 
-   ![Open Add Page Form](./screenshots/open-add-page-form.png)  
+### Adding a New Post
+
+1. **Open the Add Post Form**
+
+   Click on the **➕ Add New Post** button located in the control panel.
+
+   ![Open Add Post Form](./screenshots/open-add-post-form.png)  
    *[INPUT SCREENSHOT HERE]*
 
-2. **Fill in the Page Details**
+2. **Fill in the Post Details**
 
-   - **Picture URL:** Enter the URL of an image to associate with the page. If left blank, a random image will be assigned automatically.
+   - **Picture URL:** Enter the URL of an image to associate with the post. If left blank, a random image will be assigned automatically.
    - **Background Color:** Choose a background color for the image container.
-   - **Title:** Provide a title for your page.
+   - **Title:** Provide a title for your post.
    - **Description:** Enter a brief description.
    - **Date:** Input the date in `MM/DD/YYYY` format. Defaults to today's date if not specified.
    - **Body:** Write your content using Markdown syntax.
 
-   ![Fill Page Details](./screenshots/fill-page-details.png)  
+   ![Fill Post Details](./screenshots/fill-post-details.png)  
    *[INPUT SCREENSHOT HERE]*
 
-3. **Save the Page**
+3. **Save the Post**
 
-   Click the **💾 Save Page** button to add the page to your blog.
+   Click the **💾 Save Post** button to add the post to your blog.
 
-   ![Save Page](./screenshots/save-page.png)  
+   ![Save Post](./screenshots/save-post.png)  
    *[INPUT SCREENSHOT HERE]*
 
-### Editing a Page
+### Editing a Post
 
-1. **Locate the Page**
+1. **Locate the Post**
 
-   Find the page you wish to edit in the **Latest Grid**.
+   Find the post you wish to edit in the **Latest Grid**.
 
 2. **Open the Edit Form**
 
-   Click on the **✏️ Edit Page** button associated with the page.
+   Click on the **✏️ Edit Post** button associated with the post.
 
-   ![Edit Page Button](./screenshots/edit-page-button.png)  
+   ![Edit Post Button](./screenshots/edit-post-button.png)  
    *[INPUT SCREENSHOT HERE]*
 
 3. **Modify the Details**
@@ -156,19 +124,19 @@ Follow these instructions to set up and run Make a Blog on your local machine.
 
 4. **Save Changes**
 
-   Click the **💾 Save Page** button to apply the changes.
+   Click the **💾 Save Post** button to apply the changes.
 
-### Deleting a Page
+### Deleting a Post
 
-1. **Locate the Page**
+1. **Locate the Post**
 
-   Find the page you wish to delete in the **Latest Grid**.
+   Find the post you wish to delete in the **Latest Grid**.
 
-2. **Delete the Page**
+2. **Delete the Post**
 
-   Click on the **🗑️ Delete Page** button associated with the page.
+   Click on the **🗑️ Delete Post** button associated with the post.
 
-   ![Delete Page Button](./screenshots/delete-page-button.png)  
+   ![Delete Post Button](./screenshots/delete-post-button.png)  
    *[INPUT SCREENSHOT HERE]*
 
 3. **Confirm Deletion**
@@ -209,14 +177,14 @@ Follow these instructions to set up and run Make a Blog on your local machine.
 
 3. **Import and View Your Blog**
 
-   The application will load the data, and your pages will appear in the **Latest Grid**.
+   The application will load the data, and your posts will appear in the **Latest Grid**.
 
    ![Import Successful](./screenshots/import-success.png)  
    *[INPUT SCREENSHOT HERE]*
 
 ### Using Commands
 
-Make a Blog supports various commands to enhance your blogging experience. To access commands, type `/` in the **Command Input** field.
+MiniBlog supports various commands to enhance your blogging experience. To access commands, type `/` in the **Command Input** field.
 
 1. **Open Command Input**
 
@@ -271,7 +239,7 @@ Make a Blog supports various commands to enhance your blogging experience. To ac
 
 ## Command Reference
 
-Make a Blog supports the following commands to streamline your blogging process. Access them by typing `/` in the **Command Input** field.
+MiniBlog supports the following commands to streamline your blogging process. Access them by typing `/` in the **Command Input** field.
 
 ### `/createpost 'Your Title Here'`
 
@@ -313,51 +281,20 @@ Make a Blog supports the following commands to streamline your blogging process.
 /clearapikey
 ```
 
-## Contributing
-
-Contributions are welcome! If you'd like to improve Make a Blog, please follow these steps:
-
-1. **Fork the Repository**
-
-   Click the **Fork** button at the top-right corner of the repository page.
-
-2. **Clone Your Fork**
-
-   ```bash
-   git clone https://github.com/your-username/make-a-blog.git
-   cd make-a-blog
-   ```
-
-3. **Create a New Branch**
-
-   ```bash
-   git checkout -b feature/YourFeatureName
-   ```
-
-4. **Make Your Changes**
-
-   Implement your feature or bug fix.
-
-5. **Commit Your Changes**
-
-   ```bash
-   git commit -m "Add feature: YourFeatureName"
-   ```
-
-6. **Push to Your Fork**
-
-   ```bash
-   git push origin feature/YourFeatureName
-   ```
-
-7. **Create a Pull Request**
-
-   Go to your forked repository on GitHub and click **Compare & pull request**.
-
 ## License
 
 This project is licensed under the [MIT License](./LICENSE).
 
+## Acknowledgements
+
+- [Marked.js](https://github.com/markedjs/marked) for Markdown parsing.
+- [DOMPurify](https://github.com/cure53/DOMPurify) for sanitizing HTML.
+- [GitHub Pages](https://pages.github.com/) for hosting the live demo.
+
 ---
 
-*Made with ❤️ by [Your Name](https://github.com/your-username)*
+*Made with ❤️ by [Your Name](https://github.com/garbledhamster)*
+
+---
+
+*[INPUT SCREENSHOT HERE]*
